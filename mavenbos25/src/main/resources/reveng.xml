@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-reverse-engineering PUBLIC "-//Hibernate/Hibernate Reverse Engineering DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-reverse-engineering-3.0.dtd" >
+
+<hibernate-reverse-engineering>
+	<!-- match-table：要对哪些表对象进行反转生成，match-schema：哪个方案（用户）下的对象,必须大写
+	规则都支持正则表达式：.任意元素*0或N个元素数量
+	 -->
+	<schema-selection match-table="T_USER" match-schema="BOS25"/>
+	<schema-selection match-table="T_BC_.*" match-schema="BOS25"/>
+	<schema-selection match-table="T_QP_.*" match-schema="BOS25"/>
+	<schema-selection match-table="T_AUTH_.*" match-schema="BOS25"/>
+	<!-- 将BOS25下的T_BC_DECIDEDZONE表反转生成bc包下的 DecidedZone类，主键策略为uuid-->
+	<table name="T_BC_DECIDEDZONE" schema="BOS25"
+		class="cn.itcast.bos.domain.bc.DecidedZone">
+		<primary-key>
+			<generator class="uuid"></generator>
+		</primary-key>
+	</table>
+	<table name="T_BC_REGION" schema="BOS25"
+		class="cn.itcast.bos.domain.bc.Region">
+		<primary-key>
+			<generator class="uuid"></generator>
+		</primary-key>
+	</table>
+	<table name="T_BC_STAFF" schema="BOS25"
+		class="cn.itcast.bos.domain.bc.Staff">
+		<primary-key>
+			<generator class="uuid"></generator>
+		</primary-key>
+	</table>
+	<table name="T_BC_SUBAREA" schema="BOS25"
+		class="cn.itcast.bos.domain.bc.Subarea">
+		<primary-key>
+			<generator class="uuid"></generator>
+		</primary-key>
+	</table>
+	<table name="T_USER" schema="BOS25"
+		class="cn.itcast.bos.domain.user.User">
+		<primary-key>
+			<generator class="uuid"></generator>
+		</primary-key>
+	</table>
+	<table name="T_QP_NOTICEBILL" schema="BOS25"
+		class="cn.itcast.bos.domain.qp.NoticeBill">
+		<primary-key>
+			<generator class="uuid"></generator>
+		</primary-key>
+	</table>
+	<table name="T_QP_WORKBILL" schema="BOS25"
+		class="cn.itcast.bos.domain.qp.WorkBill">
+		<primary-key>
+			<generator class="uuid"></generator>
+		</primary-key>
+	</table>
+	<table name="T_QP_WORKORDERMANAGE" schema="BOS25"
+		class="cn.itcast.bos.domain.qp.WorkOrderManage">
+		<primary-key>
+			<generator class="uuid"></generator>
+		</primary-key>
+	</table>
+	<table name="T_AUTH_FUNCTION" schema="BOS25"
+		class="cn.itcast.bos.domain.auth.Function">
+		<primary-key>
+			<generator class="uuid"></generator>
+		</primary-key>
+	</table>
+	<table name="T_AUTH_ROLE" schema="BOS25"
+		class="cn.itcast.bos.domain.auth.Role">
+		<primary-key>
+			<generator class="uuid"></generator>
+		</primary-key>
+	</table>
+</hibernate-reverse-engineering>

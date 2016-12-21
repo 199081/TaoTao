@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+    "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
+    "http://struts.apache.org/dtds/struts-2.3.dtd">
+<struts>
+	<!-- 不用重启服务器 -->
+	<constant name="struts.i18n.reload" value="true" />
+	<constant name="struts.configuration.xml.reload" value="true" />
+	<!-- 表单样式 -->
+	<constant name="struts.ui.theme" value="simple" />
+	<!-- 国际化文件 -->
+	<constant name="struts.custom.i18n.resources" value="messages" />
+	<!-- 动态方法调用 -->
+	<constant name="struts.enable.DynamicMethodInvocation" value="true" />
+
+	<package name="basic-bos" extends="json-default">
+		<!-- 注册自定义拦截器和拦截器栈 -->
+		<interceptors>
+			<!-- <interceptor name="loginInterceptor" class="cn.itcast.bos.web.interceptor.LoginInterceptor"/> -->
+			<!-- class可以使用伪类名：spring容器的bean -->
+			<interceptor name="loginInterceptor" class="loginInterceptor"/>
+			<!-- 定义拦截器栈 -->
+			<interceptor-stack name="loginStack">
+				<interceptor-ref name="loginInterceptor">
+					<param name="excludeMethods">login</param>
+				</interceptor-ref>
+				<interceptor-ref name="defaultStack"/>
+			</interceptor-stack>
+		</interceptors>
+		
+		<!-- 覆盖默认的拦截器栈 -->
+		<!-- <default-interceptor-ref name="loginStack"/> -->
+	
+	
+		<!-- 全局结果集 -->
+		<global-results>
+			<!-- 登录的 -->
+			<result name="login">/login.jsp</result>
+			<!-- json类型的结果集 -->
+			<result name="json" type="json"/>
+		</global-results>
+	
+		<action name="index">
+			<result>/index.jsp</result>
+		</action>
+		<!-- 需要进行权限控制的页面访问 -->
+		<action name="page_*_*">
+			<result type="dispatcher">/WEB-INF/pages/{1}/{2}.jsp</result>
+		</action>
+		
+	</package>
+
+</struts>

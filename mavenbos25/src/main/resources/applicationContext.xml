@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:cache="http://www.springframework.org/schema/cache"
+	xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/context
+	http://www.springframework.org/schema/context/spring-context.xsd
+	http://www.springframework.org/schema/aop
+	http://www.springframework.org/schema/aop/spring-aop.xsd
+	http://www.springframework.org/schema/tx 
+	http://www.springframework.org/schema/tx/spring-tx.xsd
+	http://www.springframework.org/schema/data/jpa
+ 	http://www.springframework.org/schema/data/jpa/spring-jpa.xsd
+ 	http://www.springframework.org/schema/cache 
+	http://www.springframework.org/schema/cache/spring-cache.xsd">
+ 	<!-- 引入外部属性文件 -->
+	<context:property-placeholder location="classpath:db.properties" />
+
+	<!-- 连接池 -->
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+		<property name="driverClass" value="${jdbc.driver}" />
+		<property name="jdbcUrl" value="${jdbc.url}" />
+		<property name="user" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+	</bean>
+
+	<!-- 配置JPA的实体管理工厂：类似与Hibernate的sessionFactory -->
+	<bean id="entityManagerFactory"
+		class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+		<!-- 数据源 -->
+		<property name="dataSource" ref="dataSource" />
+		<!-- 实体类扫描：包含子包 -->
+		<property name="packagesToScan" value="cn.itcast.bos.domain" />
+		<!-- 其他属性配置 -->
+		<!-- jpa适配器：通用属性 -->
+		<property name="jpaVendorAdapter">
+			<!-- jpa的默认实现 -->
+			<bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+				<!-- Hibernate的jpa实现的适配器的属性 -->
+				<property name="database" value="ORACLE" />
+				<!-- 是否自动建表 -->
+				<property name="generateDdl" value="true" />
+				<!-- 方言 -->
+				<property name="databasePlatform" value="org.hibernate.dialect.Oracle10gDialect"/>
+				<!-- 打印sql -->
+				<property name="showSql" value="true"/>
+			</bean>
+		</property>
+		<!-- 配置详细的jpa属性（具体的实现技术框架的属性-Hibernate）可以不配置 -->
+		<property name="jpaProperties">
+			<props>
+				<!-- 键值对 -->
+				<prop key="hibernate.format_sql">true</prop>
+				<!-- Hibernate的二级缓存等等 -->
+				<!-- 配置Hibernate search调用”lucence的索引库的位置“-->
+				<prop key="hibernate.search.default.indexBase">e:/index25</prop>
+			</props>
+		</property>
+	</bean>
+	
+	<!-- jpa事务配置:要选择不同的事务管理器 -->
+	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+		<!-- 需要注入jpa的实体管理工厂 -->
+		<property name="entityManagerFactory" ref="entityManagerFactory" />
+	</bean>
+	
+	<!-- 注解驱动 -->
+	<tx:annotation-driven transaction-manager="transactionManager"/>
+	
+	<!-- bean注解扫描:不要都扫描，只扫描需要的包即可 -->
+	<context:component-scan base-package="cn.itcast.bos.service,cn.itcast.bos.web,cn.itcast.bos.auth"/>
+	
+	<!-- 扫描dao（repository）包，会自动帮你实现一个对应bean,关键
+	repository-impl-postfi会自动扫描实现类用，该值的后缀名自，默认Impl，一般不配置
+	 -->
+	<jpa:repositories base-package="cn.itcast.bos.dao" />
+	
+	<!-- 配置shiro的过滤器实例等等。。。 -->
+	<!-- shiro权限控制过滤器bean -->
+	<bean id="shiroSecurityFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+		<!-- shiro 的核心安全接口 -->
+		<property name="securityManager" ref="securityManager" />
+		<!-- 要求登录时的链接：一旦认证失败，就跳这 -->
+		<property name="loginUrl" value="/login.jsp" />
+		<!-- 登陆成功后要跳转的连接：认证成功，跳这里 -->
+		<property name="successUrl" value="/index.jsp" />
+		<!-- 未授权时要跳转的连接，权限不足的跳转路径：提示您的权限不足 -->
+		<property name="unauthorizedUrl" value="/unauthorized.jsp" />
+		<!-- shiro 连接约束配置，URL控制规则：路径=规则名 -->
+		<property name="filterChainDefinitions">
+			<value>
+				/login.jsp = anon
+				/validatecode.jsp = anon
+				/js/** = anon
+				/css/** = anon
+				/images/** = anon
+				/user_login.action = anon
+				/page_base_staff.action = anon
+				/page_base_region.action = perms["region"]
+				/page_base_subarea.action = roles["weihu"]
+				/page_qupai_noticebill_add.action = perms["noticebill"]	
+				/page_qupai_quickworkorder.action = roles["kefu"]
+				/** = authc
+			</value>
+		</property>
+	</bean>
+	<!-- shiro安全管理器：核心对象-大管家 -->
+	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+		<!-- 注入 Realm连接安全数据：获取数据的途径-->
+		<property name="realm" ref="bosRealm"/>
+		<!-- 注入shiro的缓存管理 -->
+		<property name="cacheManager" ref="cacheManager"/>
+	</bean>
+	
+	<!-- 开启权限控制的注解功能并且配置aop -->
+	<!-- 后处理器：通过动态代理在某bean实例化的前增强。:自己去找权限注解 -->
+	<bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
+	<!-- 切面自动代理：相当于以前的AOP标签配置 
+	advisor:切面 advice:通知
+	-->
+	<bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator" 
+	depends-on="lifecycleBeanPostProcessor">
+		<!-- 设置aop的代理使用CGLIB代理 -->
+		<property name="proxyTargetClass" value="true"/>
+	</bean>
+	
+	<!-- Advisor切面配置：授权属性的切面 -->
+	<bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+		<!-- 注入安全管理器 -->
+ 		<property name="securityManager" ref="securityManager"/>
+	</bean>
+	
+	
+	<!-- ehcache的管理器（就ehcache大集合）
+	spring提供的用来创建ehcache的管理器
+	 -->
+	<bean id="ehCacheManager" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean">
+		<!-- 注入ehcache.xml,默认就在classpath下的ehcache.xm -->
+		<property name="configLocation" value="classpath:ehcache.xml"/>
+	</bean>
+	
+	<!-- shiro缓存管理器：整合echcache -->
+	<bean id="cacheManager" class="org.apache.shiro.cache.ehcache.EhCacheManager">
+		<!-- 注入ehcache的管理器 -->
+		<property name="cacheManager" ref="ehCacheManager"/>
+	</bean>
+	
+	<!-- 配置Spring的缓存管理器 -->
+	<bean id="cacheManagerSpring" class="org.springframework.cache.ehcache.EhCacheCacheManager">
+		<!-- 注入ehcache的管理器 - -->
+		<property name="cacheManager" ref="ehCacheManager"/>
+	</bean>
+	
+	<!-- 配置缓存的注解驱动，它会自动到spring的bean中寻找缓存相关注解，并使其有效 -->
+	<cache:annotation-driven cache-manager="cacheManagerSpring"/>
+
+	
+	<!-- 导入其他的配置文件 -->
+	<import resource="applicationContext-cxf.xml"/>
+</beans>

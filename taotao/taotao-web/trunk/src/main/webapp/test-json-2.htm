@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<script type="text/javascript" src="http://manage.taotao.com/js/jquery-easyui-1.4.1/jquery.min.js"></script>
+<script type="text/javascript">
+	alert($);//打印jquery对象，说明jQuery的js文件加载成功
+	/*
+	$(function(){
+		$.ajax({
+			url : "http://manage.taotao.com/json.jsp",
+			type : "GET",
+			dataType : "json",
+			success :function(data){
+				alert(data.abc); //说明ajax请求成功
+			}
+		});
+	});
+	*/
+	function a(data){
+		alert(data.abc); 
+	}
+</script>
+<script type="text/javascript" src="http://manage.taotao.com/json.jsp?callback=a"></script>
+</head>
+<body>
+
+</body>
+</html>
